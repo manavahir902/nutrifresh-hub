@@ -22,26 +22,19 @@ const Footer = () => {
               personalized health insights for a healthier future.
             </p>
             <div className="flex items-center space-x-4 mt-4">
+              
               <a 
-                href="#" 
-                className="text-muted-foreground hover:text-primary transition-colors"
-                aria-label="GitHub"
-              >
-                <Github className="h-5 w-5" />
-              </a>
-              <a 
-                href="#" 
+                href="mailto:manavahir902@gmail.com" 
                 className="text-muted-foreground hover:text-primary transition-colors"
                 aria-label="Email"
               >
-                <Mail className="h-5 w-5" />
+                <Mail className="h-5 w-5" />manavahir902@gmail.com
               </a>
               <a 
-                href="#" 
                 className="text-muted-foreground hover:text-primary transition-colors"
                 aria-label="Phone"
               >
-                <Phone className="h-5 w-5" />
+                <Phone className="h-5 w-5" />+919999999999
               </a>
             </div>
           </div>
@@ -133,7 +126,7 @@ const Footer = () => {
             </div>
             <div className="text-muted-foreground text-sm">
               Built with ❤️ by{" "}
-              <span className="text-primary font-medium">Team NutriTech</span>
+              <span className="text-primary font-medium">Team HexaHack</span>
             </div>
           </div>
         </div>

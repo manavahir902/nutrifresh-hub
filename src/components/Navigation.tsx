@@ -5,27 +5,38 @@ import {
   PlusCircle, 
   BarChart3, 
   Brain, 
-  Heart, 
   User, 
   Menu, 
   X,
-  Leaf
+  Apple,
+  LogOut,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const navItems = [
     { name: "Dashboard", href: "/", icon: Home },
-    { name: "Log Meal", href: "/log-meal", icon: PlusCircle },
     { name: "Nutrition", href: "/nutrition", icon: BarChart3 },
     { name: "AI Suggestions", href: "/ai-suggestions", icon: Brain },
-    { name: "Healthy Tips", href: "/tips", icon: Heart },
-    { name: "Login", href: "/login", icon: User },
+    { name: "Meal Plans", href: "/meal-plans", icon: Calendar },
   ];
+
+  const handleAuthClick = () => {
+    if (user) {
+      signOut();
+    } else {
+      setIsAuthModalOpen(true);
+    }
+  };
 
   return (
     <nav className="bg-card border-b border-border shadow-card">
@@ -35,7 +46,7 @@ const Navigation = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-green">
-                <Leaf className="h-6 w-6 text-primary-foreground" />
+                <Apple className="h-6 w-6 text-primary-foreground" />
               </div>
               <span className="text-xl font-semibold text-foreground">
                 NutriEdu
@@ -63,6 +74,25 @@ const Navigation = () => {
                 </Link>
               );
             })}
+            
+            {/* Auth Button */}
+            <Button
+              onClick={handleAuthClick}
+              variant={user ? "outline" : "default"}
+              className="ml-2"
+            >
+              {user ? (
+                <>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </>
+              ) : (
+                <>
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In
+                </>
+              )}
+            </Button>
           </div>
 
           {/* Mobile menu button */}
@@ -106,9 +136,36 @@ const Navigation = () => {
                 </Link>
               );
             })}
+            
+            {/* Mobile Auth Button */}
+            <button
+              onClick={() => {
+                handleAuthClick();
+                setIsMobileMenuOpen(false);
+              }}
+              className={cn(
+                "flex items-center space-x-3 px-6 py-3 text-sm font-medium transition-colors w-full text-left",
+                "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              )}
+            >
+              {user ? (
+                <>
+                  <LogOut className="h-5 w-5" />
+                  <span>Sign Out</span>
+                </>
+              ) : (
+                <>
+                  <User className="h-5 w-5" />
+                  <span>Sign In</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}
+
+      {/* Auth Modal */}
+      <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
     </nav>
   );
 };

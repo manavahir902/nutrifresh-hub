@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,11 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Users, GraduationCap, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const { toast } = useToast();
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("student");
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,7 +23,7 @@ const Login = () => {
     childName: ""
   });
 
-  const handleSubmit = (e: React.FormEvent, userType: string) => {
+  const handleSubmit = async (e: React.FormEvent, userType: string) => {
     e.preventDefault();
     
     if (!formData.email || !formData.password) {
@@ -30,18 +35,33 @@ const Login = () => {
       return;
     }
 
-    toast({
-      title: "Login Successful!",
-      description: `Welcome back! Logging in as ${userType}.`,
-    });
-
-    // Reset form
-    setFormData({
-      email: "",
-      password: "",
-      studentId: "",
-      childName: ""
-    });
+    setLoading(true);
+    const { error } = await signIn(formData.email, formData.password);
+    
+    if (error) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Login Successful!",
+        description: `Welcome back! Logging in as ${userType}.`,
+      });
+      
+      // Reset form
+      setFormData({
+        email: "",
+        password: "",
+        studentId: "",
+        childName: ""
+      });
+      
+      // Navigate to dashboard
+      navigate("/");
+    }
+    setLoading(false);
   };
 
   const userTypes = [
@@ -190,12 +210,13 @@ const Login = () => {
                     )}
 
                     {/* Submit Button */}
-                    <Button 
+                    <Button
                       type="submit"
                       className={`w-full bg-gradient-to-r ${type.color} hover:opacity-90 shadow-green text-lg py-6`}
+                      disabled={loading}
                     >
                       <type.icon className="h-5 w-5 mr-2" />
-                      Sign In as {type.name}
+                      {loading ? "Signing In..." : `Sign In as ${type.name}`}
                     </Button>
                   </form>
 

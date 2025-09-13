@@ -7,10 +7,10 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import Dashboard from "./pages/Dashboard";
-import LogMeal from "./pages/LogMeal";
 import NutritionDashboard from "./pages/NutritionDashboard";
 import AISuggestions from "./pages/AISuggestions";
 import MealPlans from "./pages/MealPlans";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,10 +27,10 @@ const App = () => (
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/log-meal" element={<LogMeal />} />
                 <Route path="/nutrition" element={<NutritionDashboard />} />
                 <Route path="/ai-suggestions" element={<AISuggestions />} />
                 <Route path="/meal-plans" element={<MealPlans />} />
+                <Route path="/login" element={<Login />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

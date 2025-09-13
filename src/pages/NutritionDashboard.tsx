@@ -1,22 +1,87 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { BarChart3, PieChart, Users, User, TrendingUp, Calendar } from "lucide-react";
+import { BarChart3, PieChart, Users, User, TrendingUp, Calendar, Target, DollarSign } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
+import { useAuth } from "@/hooks/useAuth";
+import { useStudentDetails } from "@/hooks/useStudentDetails";
+import { supabase } from "@/integrations/supabase/client";
 
 const NutritionDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const { user } = useAuth();
+  const { studentDetails } = useStudentDetails();
+  const [analytics, setAnalytics] = useState({
+    weeklyCalories: [0, 0, 0, 0, 0, 0, 0],
+    totalMeals: 0,
+    averageCalories: 0,
+    totalCost: 0,
+    studentMeals: 0,
+    customMeals: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-  const mockChartData = {
-    healthyVsUnhealthy: { healthy: 65, unhealthy: 35 },
-    weeklyCalories: [1800, 1950, 1720, 2100, 1890, 1760, 2050],
-    studentComparison: [
-      { name: "Alice", healthy: 80, calories: 1850 },
-      { name: "Bob", healthy: 65, calories: 2100 },
-      { name: "Carol", healthy: 90, calories: 1750 },
-      { name: "David", healthy: 55, calories: 2200 }
-    ]
+  useEffect(() => {
+    if (user) {
+      fetchAnalytics();
+    }
+  }, [user]);
+
+  const fetchAnalytics = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch meal plans data
+      const { data: mealPlans, error: mealPlansError } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (mealPlansError) throw mealPlansError;
+
+      // Fetch student meals data
+      const { data: studentMeals, error: studentMealsError } = await supabase
+        .from('student_meals' as any)
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (studentMealsError) {
+        // If table doesn't exist, just use empty array
+        if (studentMealsError.message.includes('relation "student_meals" does not exist')) {
+          console.log('Student meals table not found, using empty array');
+        } else {
+          throw studentMealsError;
+        }
+      }
+
+      // Calculate analytics
+      const weeklyCalories = [0, 0, 0, 0, 0, 0, 0];
+      let totalMeals = 0;
+      let totalCalories = 0;
+      let totalCost = 0;
+
+      mealPlans?.forEach(plan => {
+        const dayIndex = plan.day_of_week - 1;
+        weeklyCalories[dayIndex] += plan.total_calories;
+        totalMeals++;
+        totalCalories += plan.total_calories;
+        totalCost += plan.total_cost;
+      });
+
+      setAnalytics({
+        weeklyCalories,
+        totalMeals,
+        averageCalories: totalMeals > 0 ? Math.round(totalCalories / totalMeals) : 0,
+        totalCost: Math.round(totalCost * 100) / 100,
+        studentMeals: (studentMeals || [])?.length || 0,
+        customMeals: (studentMeals || [])?.filter(meal => meal.is_custom).length || 0
+      });
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,30 +102,30 @@ const NutritionDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Weekly Average"
-            value="1,890"
-            subtitle="Calories per day"
+            value={analytics.averageCalories.toLocaleString()}
+            subtitle="Calories per meal"
             icon={TrendingUp}
             variant="default"
           />
           <StatCard
-            title="Healthy Meals"
-            value="65%"
-            subtitle="This week"
+            title="Your Meals"
+            value={analytics.studentMeals.toString()}
+            subtitle="Custom meals added"
             icon={PieChart}
             variant="success"
           />
           <StatCard
-            title="Active Students"
-            value="24"
-            subtitle="Logging meals"
+            title="Total Meals"
+            value={analytics.totalMeals.toString()}
+            subtitle="In meal plans"
             icon={Users}
             variant="default"
           />
           <StatCard
-            title="Days Tracked"
-            value="7/7"
-            subtitle="This week"
-            icon={Calendar}
+            title="Weekly Cost"
+            value={`₹${analytics.totalCost}`}
+            subtitle="Estimated cost"
+            icon={DollarSign}
             variant="success"
           />
         </div>
@@ -83,40 +148,7 @@ const NutritionDashboard = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6 animate-fade-in">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Healthy vs Unhealthy Chart */}
-              <Card className="shadow-card border-0">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <PieChart className="h-5 w-5 text-primary" />
-                    <span>Healthy vs Unhealthy Meals</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="relative w-48 h-48 mx-auto mb-6">
-                    {/* Simplified pie chart representation */}
-                    <div className="w-full h-full rounded-full bg-gradient-to-r from-success to-accent flex items-center justify-center">
-                      <div className="w-32 h-32 bg-destructive/20 rounded-full flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-foreground">65%</div>
-                          <div className="text-sm text-muted-foreground">Healthy</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-center space-x-6">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-success rounded-full"></div>
-                      <span className="text-sm text-muted-foreground">Healthy (65%)</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-destructive/60 rounded-full"></div>
-                      <span className="text-sm text-muted-foreground">Unhealthy (35%)</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
               {/* Weekly Calorie Intake */}
               <Card className="shadow-card border-0">
                 <CardHeader>
@@ -134,19 +166,19 @@ const NutritionDashboard = () => {
                           <div 
                             className="bg-gradient-primary h-full rounded-full transition-all duration-300"
                             style={{ 
-                              width: `${(mockChartData.weeklyCalories[index] / 2500) * 100}%` 
+                              width: `${analytics.weeklyCalories[index] > 0 ? (analytics.weeklyCalories[index] / 2500) * 100 : 0}%` 
                             }}
                           ></div>
                         </div>
                         <div className="w-16 text-sm font-medium text-right">
-                          {mockChartData.weeklyCalories[index]}
+                          {analytics.weeklyCalories[index] || 0}
                         </div>
                       </div>
                     ))}
                   </div>
                   <div className="mt-4 text-center">
                     <p className="text-sm text-muted-foreground">
-                      Average: <span className="font-medium text-foreground">1,890 calories/day</span>
+                      Average: <span className="font-medium text-foreground">{analytics.averageCalories} calories/meal</span>
                     </p>
                   </div>
                 </CardContent>
@@ -155,46 +187,87 @@ const NutritionDashboard = () => {
           </TabsContent>
 
           <TabsContent value="students" className="animate-fade-in">
-            <Card className="shadow-card border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-primary" />
-                  <span>Student-wise Comparison</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {mockChartData.studentComparison.map((student, index) => (
-                    <div key={student.name} className="bg-secondary/30 p-6 rounded-xl">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-foreground">{student.name}</h3>
-                        <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5 text-primary-foreground" />
+            <div className="space-y-6">
+              {/* Student Details Card */}
+              {studentDetails && (
+                <Card className="shadow-card border-0">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <User className="h-5 w-5 text-primary" />
+                      <span>Your Profile</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-semibold text-foreground mb-2">Physical Stats</h3>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Weight:</span>
+                              <span className="font-medium">{studentDetails.weight} kg</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Height:</span>
+                              <span className="font-medium">{studentDetails.height_cm} cm</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Body Type:</span>
+                              <span className="font-medium capitalize">{studentDetails.body_type.replace('_', ' ')}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <div>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Healthy Ratio</span>
-                            <span className="font-medium">{student.healthy}%</span>
+                          <h3 className="font-semibold text-foreground mb-2">Goals & Progress</h3>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Goal:</span>
+                              <span className="font-medium capitalize">{studentDetails.goal.replace('_', ' ')}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Custom Meals:</span>
+                              <span className="font-medium">{analytics.studentMeals}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Weekly Budget:</span>
+                              <span className="font-medium">₹{analytics.totalCost}</span>
+                            </div>
                           </div>
-                          <div className="bg-muted rounded-full h-2">
-                            <div 
-                              className="bg-success h-full rounded-full transition-all duration-300"
-                              style={{ width: `${student.healthy}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Avg. Calories</span>
-                          <span className="font-medium">{student.calories}</span>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Meal Insights */}
+              <Card className="shadow-card border-0">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-primary" />
+                    <span>Meal Insights</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center p-4 bg-secondary/30 rounded-xl">
+                      <div className="text-2xl font-bold text-primary mb-2">{analytics.studentMeals}</div>
+                      <div className="text-sm text-muted-foreground">Your Custom Meals</div>
+                    </div>
+                    <div className="text-center p-4 bg-secondary/30 rounded-xl">
+                      <div className="text-2xl font-bold text-primary mb-2">{analytics.totalMeals}</div>
+                      <div className="text-sm text-muted-foreground">Total Meal Plans</div>
+                    </div>
+                    <div className="text-center p-4 bg-secondary/30 rounded-xl">
+                      <div className="text-2xl font-bold text-primary mb-2">₹{analytics.totalCost}</div>
+                      <div className="text-sm text-muted-foreground">Weekly Cost</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="class" className="animate-fade-in">

@@ -17,6 +17,7 @@ export default {
         'inter': ['Inter', 'sans-serif'],
       },
       colors: {
+        'cosmic-latte' : '#FBF2E9',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

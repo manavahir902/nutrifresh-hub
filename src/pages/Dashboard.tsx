@@ -2,8 +2,13 @@ import { Utensils, TrendingUp, Target, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/stat-card";
 import { Link } from "react-router-dom";
+import { useStudentDetails } from "@/hooks/useStudentDetails";
+import { StudentDetailsModal } from "@/components/auth/StudentDetailsModal";
+import { UpdateFoodItems } from "@/components/UpdateFoodItems";
 
 const Dashboard = () => {
+  const { showDetailsModal, setShowDetailsModal, refreshStudentDetails } = useStudentDetails();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -11,7 +16,7 @@ const Dashboard = () => {
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
         <div className="relative max-w-4xl mx-auto text-center animate-fade-in">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
-            NutriEdu Platform
+            NutriEdu
           </h1>
           <p className="text-xl md:text-2xl mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed">
             Empowering students with smart nutrition tracking and personalized health insights
@@ -23,7 +28,7 @@ const Dashboard = () => {
               variant="secondary"
               className="bg-white/20 hover:bg-white/30 text-primary-foreground border-white/30 backdrop-blur-sm"
             >
-              <Link to="/log-meal">Log Your Meal</Link>
+              <Link to="/meal-plans">View Meal Plans</Link>
             </Button>
             <Button 
               asChild 
@@ -31,14 +36,14 @@ const Dashboard = () => {
               variant="outline"
               className="border-white/30 text-primary-foreground hover:bg-white/10 backdrop-blur-sm"
             >
-              <Link to="/nutrition">View Dashboard</Link>
+              <Link to="/nutrition">View Analytics</Link>
             </Button>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 ">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">
@@ -93,12 +98,12 @@ const Dashboard = () => {
               <div className="w-16 h-16 bg-gradient-primary rounded-xl mx-auto mb-4 flex items-center justify-center">
                 <Utensils className="h-8 w-8 text-primary-foreground" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">Log New Meal</h3>
+              <h3 className="text-xl font-semibold mb-4">Add Your Meals</h3>
               <p className="text-muted-foreground mb-6">
-                Record what you ate and track your nutritional intake
+                Add your favorite meals to get personalized meal plans
               </p>
               <Button asChild className="w-full">
-                <Link to="/log-meal">Log Meal</Link>
+                <Link to="/meal-plans">Add Meals</Link>
               </Button>
             </div>
 
@@ -130,6 +135,24 @@ const Dashboard = () => {
           </div>
         </div>
       </section>
+
+      {/* Update Food Items Section */}
+      <section className="py-16 px-4 bg-background">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-foreground mb-8">
+            Database Management
+          </h2>
+          <div className="flex justify-center">
+            <UpdateFoodItems />
+          </div>
+        </div>
+      </section>
+
+      {/* Student Details Modal */}
+      <StudentDetailsModal 
+        open={showDetailsModal} 
+        onOpenChange={setShowDetailsModal}
+      />
     </div>
   );
 };
