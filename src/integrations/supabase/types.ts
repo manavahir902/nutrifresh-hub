@@ -14,7 +14,249 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      food_items: {
+        Row: {
+          calories_per_100g: number
+          category: string
+          cost_per_100g_rupees: number
+          created_at: string
+          id: string
+          is_veg: boolean
+          name: string
+        }
+        Insert: {
+          calories_per_100g: number
+          category?: string
+          cost_per_100g_rupees: number
+          created_at?: string
+          id?: string
+          is_veg?: boolean
+          name: string
+        }
+        Update: {
+          calories_per_100g?: number
+          category?: string
+          cost_per_100g_rupees?: number
+          created_at?: string
+          id?: string
+          is_veg?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      meal_plan_items: {
+        Row: {
+          created_at: string
+          food_item_id: string
+          id: string
+          meal_plan_id: string
+          quantity_grams: number
+        }
+        Insert: {
+          created_at?: string
+          food_item_id: string
+          id?: string
+          meal_plan_id: string
+          quantity_grams?: number
+        }
+        Update: {
+          created_at?: string
+          food_item_id?: string
+          id?: string
+          meal_plan_id?: string
+          quantity_grams?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_items_food_item_id_fkey"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_items_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_plans: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          is_veg: boolean
+          meal_type: string
+          total_calories: number
+          total_cost: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_veg?: boolean
+          meal_type: string
+          total_calories?: number
+          total_cost?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_veg?: boolean
+          meal_type?: string
+          total_calories?: number
+          total_cost?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age_group: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_group: string
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_group?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_details: {
+        Row: {
+          body_type: string
+          created_at: string
+          goal: string
+          height_cm: number
+          height_feet: string
+          id: string
+          updated_at: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          body_type: string
+          created_at?: string
+          goal: string
+          height_cm: number
+          height_feet: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          weight: number
+        }
+        Update: {
+          body_type?: string
+          created_at?: string
+          goal?: string
+          height_cm?: number
+          height_feet?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      user_meal_items: {
+        Row: {
+          created_at: string
+          food_item_id: string
+          id: string
+          quantity_grams: number
+          user_meal_id: string
+        }
+        Insert: {
+          created_at?: string
+          food_item_id: string
+          id?: string
+          quantity_grams?: number
+          user_meal_id: string
+        }
+        Update: {
+          created_at?: string
+          food_item_id?: string
+          id?: string
+          quantity_grams?: number
+          user_meal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_meal_items_food_item_id_fkey"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_meal_items_user_meal_id_fkey"
+            columns: ["user_meal_id"]
+            isOneToOne: false
+            referencedRelation: "user_meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_meals: {
+        Row: {
+          created_at: string
+          id: string
+          meal_date: string
+          meal_name: string
+          meal_type: string
+          total_calories: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meal_date?: string
+          meal_name: string
+          meal_type: string
+          total_calories?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meal_date?: string
+          meal_name?: string
+          meal_type?: string
+          total_calories?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
