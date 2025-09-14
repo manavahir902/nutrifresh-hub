@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   Home, 
@@ -10,25 +10,96 @@ import {
   X,
   Apple,
   LogOut,
-  Calendar
+  Calendar,
+  GraduationCap,
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { profile, isStudent, isTeacher, isAdmin, loading: roleLoading } = useUserRole();
 
-  const navItems = [
-    { name: "Dashboard", href: "/", icon: Home },
-    { name: "Nutrition", href: "/nutrition", icon: BarChart3 },
-    { name: "AI Suggestions", href: "/ai-suggestions", icon: Brain },
-    { name: "Meal Plans", href: "/meal-plans", icon: Calendar },
-  ];
+  useEffect(() => {
+    if (user && isStudent && !roleLoading) {
+      fetchUnreadCount();
+    }
+  }, [user, isStudent, roleLoading]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('id')
+        .or(`recipient_id.eq.${user!.id},and(is_broadcast.eq.true,recipient_id.is.null)`)
+        .eq('is_read', false);
+
+      if (error) {
+        console.error('Error fetching unread count:', error);
+        setUnreadCount(0);
+        return;
+      }
+      setUnreadCount(data?.length || 0);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+      setUnreadCount(0);
+    }
+  };
+
+  // Show loading state while role is being determined
+  if (roleLoading) {
+    return (
+      <nav className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <div className="h-8 w-32 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  const getNavItems = () => {
+    if (isAdmin) {
+      return [
+        { name: "Admin Panel", href: "/admin", icon: GraduationCap },
+      ];
+    } else if (isTeacher) {
+      return [
+        { name: "Teacher Dashboard", href: "/teacher", icon: GraduationCap },
+      ];
+    } else if (isStudent) {
+      return [
+        { name: "Dashboard", href: "/", icon: Home },
+        { name: "Nutrition", href: "/nutrition", icon: BarChart3 },
+        { name: "AI Suggestions", href: "/ai-suggestions", icon: Brain },
+        { name: "Meal Plans", href: "/meal-plans", icon: Calendar },
+        { name: "Notifications", href: "/notifications", icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
+      ];
+    }
+    return [
+      { name: "Dashboard", href: "/", icon: Home },
+      { name: "Nutrition", href: "/nutrition", icon: BarChart3 },
+      { name: "AI Suggestions", href: "/ai-suggestions", icon: Brain },
+      { name: "Meal Plans", href: "/meal-plans", icon: Calendar },
+    ];
+  };
+
+  const navItems = getNavItems();
 
   const handleAuthClick = () => {
     if (user) {
@@ -71,6 +142,11 @@ const Navigation = () => {
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.name}</span>
+                  {item.badge && (
+                    <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -133,6 +209,11 @@ const Navigation = () => {
                 >
                   <item.icon className="h-5 w-5" />
                   <span>{item.name}</span>
+                  {item.badge && (
+                    <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}

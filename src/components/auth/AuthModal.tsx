@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, GraduationCap, Eye, EyeOff, Mail, Lock, UserPlus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { TeacherLoginModal } from "./TeacherLoginModal";
 
 interface AuthModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
+  const [showTeacherLogin, setShowTeacherLogin] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -90,7 +92,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     } else {
       toast({
         title: "Account Created!",
-        description: "Welcome to NutriEdu! Please check your email to verify your account.",
+        description: "Welcome to NutriEdu! Please check your email and click the confirmation link to verify your account before signing in.",
       });
       onOpenChange(false);
       resetForm();
@@ -177,6 +179,27 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing In..." : "Sign In"}
               </Button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or
+                  </span>
+                </div>
+              </div>
+              
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full flex items-center space-x-2"
+                onClick={() => setShowTeacherLogin(true)}
+              >
+                <GraduationCap className="h-4 w-4" />
+                <span>Sign In as Teacher</span>
+              </Button>
             </form>
           </TabsContent>
 
@@ -232,28 +255,6 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4" />
-                        <span>Student</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="teacher">
-                      <div className="flex items-center space-x-2">
-                        <GraduationCap className="h-4 w-4" />
-                        <span>Teacher</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
@@ -285,6 +286,11 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
           </TabsContent>
         </Tabs>
       </DialogContent>
+      
+      <TeacherLoginModal 
+        open={showTeacherLogin} 
+        onOpenChange={setShowTeacherLogin} 
+      />
     </Dialog>
   );
 }

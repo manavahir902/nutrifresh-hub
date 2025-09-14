@@ -6,7 +6,7 @@ CREATE TABLE public.profiles (
   last_name TEXT NOT NULL,
   email TEXT NOT NULL,
   age_group TEXT NOT NULL CHECK (age_group IN ('5-10', '11-15', '16-20', '21+')),
-  role TEXT NOT NULL CHECK (role IN ('student', 'teacher')),
+  role TEXT NOT NULL CHECK (role IN ('student', 'teacher', 'admin')),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );

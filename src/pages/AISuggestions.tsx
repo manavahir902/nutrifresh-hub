@@ -2,12 +2,75 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Brain, Sparkles, MessageCircle, RefreshCw, Lightbulb, BookOpen, Target, Droplets, Clock, Apple } from "lucide-react";
 import { useStudentDetails } from "@/hooks/useStudentDetails";
+import { useAuth } from "@/hooks/useAuth";
+import { NutritionChatbot } from "@/components/ai/NutritionChatbot";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const AISuggestions = () => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [dailyFacts, setDailyFacts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { studentDetails } = useStudentDetails();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Auto-generate daily facts on component mount
+  useEffect(() => {
+    if (user) {
+      generateDailyFacts();
+    }
+  }, [user]);
+
+  const generateDailyFacts = async () => {
+    try {
+      setLoading(true);
+      
+      // Generate 3 random daily facts from the nutrition education array
+      const shuffled = [...nutritionEducation].sort(() => 0.5 - Math.random());
+      const selectedFacts = shuffled.slice(0, 3);
+      
+      // Add some dynamic content based on current time
+      const currentHour = new Date().getHours();
+      let timeBasedFact = null;
+      
+      if (currentHour >= 6 && currentHour < 10) {
+        timeBasedFact = {
+          category: "morning",
+          title: "🌅 Morning Nutrition Tip",
+          icon: "☀️",
+          content: "Start your day with a balanced breakfast containing protein, complex carbs, and healthy fats. This helps stabilize blood sugar and provides sustained energy for your morning activities."
+        };
+      } else if (currentHour >= 12 && currentHour < 14) {
+        timeBasedFact = {
+          category: "lunch",
+          title: "🍽️ Lunch Time Reminder",
+          icon: "🥗",
+          content: "Aim for a colorful lunch with vegetables, lean protein, and whole grains. This combination provides essential nutrients and keeps you satisfied until dinner."
+        };
+      } else if (currentHour >= 18 && currentHour < 20) {
+        timeBasedFact = {
+          category: "dinner",
+          title: "🌙 Evening Nutrition",
+          icon: "🍽️",
+          content: "Keep dinner light and eat at least 2-3 hours before bedtime. Focus on lean proteins and vegetables to support overnight recovery and metabolism."
+        };
+      }
+      
+      const allFacts = timeBasedFact ? [timeBasedFact, ...selectedFacts] : selectedFacts;
+      setDailyFacts(allFacts.slice(0, 4));
+      
+    } catch (error) {
+      console.error('Error generating daily facts:', error);
+      // Fallback to static facts
+      setDailyFacts(nutritionEducation.slice(0, 4));
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const nutritionEducation = [
     {
@@ -177,10 +240,84 @@ const AISuggestions = () => {
           <div className="w-16 h-16 bg-gradient-primary rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-green">
             <Brain className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">AI Nutrition Suggestions</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">AI Nutrition Assistant</h1>
           <p className="text-muted-foreground">
-            Personalized recommendations based on your eating patterns
+            Get personalized nutrition advice and chat with our AI assistant
           </p>
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="suggestions" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="suggestions" className="flex items-center space-x-2">
+              <Lightbulb className="h-4 w-4" />
+              <span>AI Suggestions</span>
+            </TabsTrigger>
+            <TabsTrigger value="chatbot" className="flex items-center space-x-2">
+              <MessageCircle className="h-4 w-4" />
+              <span>Chat Assistant</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="suggestions">
+
+        {/* Daily Facts Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center space-x-2">
+              <Lightbulb className="h-6 w-6 text-primary" />
+              <span>Daily Nutrition Facts</span>
+            </h2>
+            <Button 
+              onClick={generateDailyFacts}
+              disabled={loading}
+              variant="outline"
+              size="sm"
+            >
+              {loading ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          
+          {loading ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-muted rounded w-full"></div>
+                      <div className="h-3 bg-muted rounded w-5/6"></div>
+                      <div className="h-3 bg-muted rounded w-4/6"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {dailyFacts.map((fact, index) => (
+                <Card key={index} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <span className="text-2xl">{fact.icon}</span>
+                      <span>{fact.title}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {fact.content}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Generate New Suggestions */}
@@ -198,7 +335,7 @@ const AISuggestions = () => {
             ) : (
               <>
                 <Sparkles className="h-4 w-4 mr-2" />
-                Get New Suggestions
+                Get Personalized Suggestions
               </>
             )}
           </Button>
@@ -400,6 +537,12 @@ const AISuggestions = () => {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="chatbot">
+            <NutritionChatbot />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

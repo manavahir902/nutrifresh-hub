@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Teacher Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Debug Teacher Dashboard</h1>
+    <div id="output"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://lkkpwapwnolkyugmopuq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxra3B3YXB3bm9sa3l1Z21vcHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NDE4NTYsImV4cCI6MjA3MzMxNzg1Nn0.xl4MNiB3ImLyz9WO4PtVJUjMQCnI3VN75YqOnFKdCmY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        async function debugDashboard() {
+            const output = document.getElementById('output');
+            
+            try {
+                // Check current user
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                output.innerHTML += `<h2>1. Current User:</h2>`;
+                if (userError) {
+                    output.innerHTML += `<p>❌ User error: ${userError.message}</p>`;
+                } else if (user) {
+                    output.innerHTML += `<p>✅ User found: ${user.email} (ID: ${user.id})</p>`;
+                } else {
+                    output.innerHTML += `<p>❌ No user authenticated</p>`;
+                }
+
+                // Test students query
+                output.innerHTML += `<h2>2. Students Query:</h2>`;
+                const { data: students, error: studentsError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('role', 'student');
+                
+                if (studentsError) {
+                    output.innerHTML += `<p>❌ Students error: ${studentsError.message}</p>`;
+                } else {
+                    output.innerHTML += `<p>✅ Students found: ${students.length}</p>`;
+                    students.forEach(student => {
+                        output.innerHTML += `<p>  - ${student.first_name} ${student.last_name} (${student.email})</p>`;
+                    });
+                }
+
+                // Test meals query
+                output.innerHTML += `<h2>3. Meals Query:</h2>`;
+                const { data: meals, error: mealsError } = await supabase
+                    .from('student_meals')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                
+                if (mealsError) {
+                    output.innerHTML += `<p>❌ Meals error: ${mealsError.message}</p>`;
+                } else {
+                    output.innerHTML += `<p>✅ Meals found: ${meals.length}</p>`;
+                    meals.forEach(meal => {
+                        output.innerHTML += `<p>  - ${meal.meal_name} (${meal.estimated_calories} cal)</p>`;
+                    });
+                }
+
+                // Test messages query
+                output.innerHTML += `<h2>4. Messages Query:</h2>`;
+                const { data: messages, error: messagesError } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                
+                if (messagesError) {
+                    output.innerHTML += `<p>❌ Messages error: ${messagesError.message}</p>`;
+                } else {
+                    output.innerHTML += `<p>✅ Messages found: ${messages.length}</p>`;
+                }
+
+                // Calculate stats
+                const totalStudents = students?.length || 0;
+                const totalMealsLogged = meals?.length || 0;
+                const totalCalories = meals?.reduce((sum, meal) => sum + (meal.estimated_calories || 0), 0) || 0;
+                const averageCalories = totalMealsLogged > 0 ? Math.round(totalCalories / totalMealsLogged) : 0;
+
+                output.innerHTML += `<h2>5. Dashboard Stats:</h2>`;
+                output.innerHTML += `<p>Total Students: ${totalStudents}</p>`;
+                output.innerHTML += `<p>Total Meals Logged: ${totalMealsLogged}</p>`;
+                output.innerHTML += `<p>Average Calories: ${averageCalories}</p>`;
+                output.innerHTML += `<p>Total Messages: ${messages?.length || 0}</p>`;
+
+            } catch (err) {
+                output.innerHTML += `<p>❌ Error: ${err.message}</p>`;
+            }
+        }
+
+        // Run debug when page loads
+        window.addEventListener('load', debugDashboard);
+    </script>
+</body>
+</html>

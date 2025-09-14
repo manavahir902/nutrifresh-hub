@@ -152,6 +152,219 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_credentials: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          teacher_code: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          teacher_code: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          teacher_code?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_broadcast: boolean
+          is_read: boolean
+          message_type: string
+          read_at: string | null
+          recipient_id: string | null
+          sender_id: string
+          subject: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_broadcast?: boolean
+          is_read?: boolean
+          message_type: string
+          read_at?: string | null
+          recipient_id?: string | null
+          sender_id: string
+          subject: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_broadcast?: boolean
+          is_read?: boolean
+          message_type?: string
+          read_at?: string | null
+          recipient_id?: string | null
+          sender_id?: string
+          subject?: string
+        }
+        Relationships: []
+      }
+      ai_suggestions: {
+        Row: {
+          suggestion_type: string
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          target_audience: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          suggestion_type: string
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          target_audience: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          suggestion_type?: string
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          target_audience?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      personalized_meal_plans: {
+        Row: {
+          id: string
+          student_id: string
+          plan_name: string
+          description: string | null
+          target_calories: number
+          target_protein: number
+          target_carbs: number
+          target_fat: number
+          duration_days: number
+          is_active: boolean
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          student_id: string
+          plan_name: string
+          description?: string | null
+          target_calories: number
+          target_protein: number
+          target_carbs: number
+          target_fat: number
+          duration_days?: number
+          is_active?: boolean
+          created_by: string
+          created_at?: string
+          updated_at?: string
+          id?: string
+        }
+        Update: {
+          student_id?: string
+          plan_name?: string
+          description?: string | null
+          target_calories?: number
+          target_protein?: number
+          target_carbs?: number
+          target_fat?: number
+          duration_days?: number
+          is_active?: boolean
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      personalized_meal_plan_items: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          food_item_id: string
+          id: string
+          meal_plan_id: string
+          meal_type: string
+          quantity_grams: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          food_item_id: string
+          id?: string
+          meal_plan_id: string
+          meal_type: string
+          quantity_grams?: number
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          food_item_id?: string
+          id?: string
+          meal_plan_id?: string
+          meal_type?: string
+          quantity_grams?: number
+        }
+        Relationships: []
+      }
+      student_analytics: {
+        Row: {
+          id: string
+          student_id: string
+          metric_name: string
+          metric_value: number
+          metric_unit: string
+          recorded_at: string
+          notes: string | null
+        }
+        Insert: {
+          student_id: string
+          metric_name: string
+          metric_value: number
+          metric_unit: string
+          recorded_at?: string
+          notes?: string | null
+          id?: string
+        }
+        Update: {
+          student_id?: string
+          metric_name?: string
+          metric_value?: number
+          metric_unit?: string
+          recorded_at?: string
+          notes?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       student_details: {
         Row: {
           body_type: string
@@ -286,7 +499,7 @@ export type Tables<
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -380,6 +593,21 @@ export type CompositeTypes<
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
