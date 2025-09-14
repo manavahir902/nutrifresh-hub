@@ -20,7 +20,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { StudentAnalytics } from "@/components/teacher/StudentAnalytics";
 import { MessageStudents } from "@/components/teacher/MessageStudents";
-import { MealPlanGenerator } from "@/components/teacher/MealPlanGenerator";
 import { AISuggestionsManager } from "@/components/teacher/AISuggestionsManager";
 
 interface StudentStats {
@@ -173,62 +172,63 @@ export function TeacherDashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalStudents}</div>
+            <div className="text-2xl font-bold text-primary">{stats.totalStudents}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.activeStudents} active
+              {stats.activeStudents} active this week
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Meals Logged</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalMealsLogged}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.totalMealsLogged}</div>
             <p className="text-xs text-muted-foreground">
               This week
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. Calories</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.averageCalories}</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.averageCalories}</div>
             <p className="text-xs text-muted-foreground">
-              Per meal
+              Per meal logged
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Goals Set</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <Target className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.studentsWithGoals}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.studentsWithGoals}</div>
             <p className="text-xs text-muted-foreground">
-              Students with goals
+              Students with nutrition goals
             </p>
           </CardContent>
         </Card>
       </div>
 
+
       {/* Main Content Tabs */}
       <Tabs defaultValue="analytics" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="analytics" className="flex items-center space-x-2">
             <BarChart3 className="h-4 w-4" />
             <span>Analytics</span>
@@ -236,10 +236,6 @@ export function TeacherDashboard() {
           <TabsTrigger value="messages" className="flex items-center space-x-2">
             <MessageSquare className="h-4 w-4" />
             <span>Messages</span>
-          </TabsTrigger>
-          <TabsTrigger value="meal-plans" className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4" />
-            <span>Meal Plans</span>
           </TabsTrigger>
           <TabsTrigger value="suggestions" className="flex items-center space-x-2">
             <Award className="h-4 w-4" />
@@ -253,10 +249,6 @@ export function TeacherDashboard() {
 
         <TabsContent value="messages" className="space-y-4">
           <MessageStudents />
-        </TabsContent>
-
-        <TabsContent value="meal-plans" className="space-y-4">
-          <MealPlanGenerator />
         </TabsContent>
 
         <TabsContent value="suggestions" className="space-y-4">

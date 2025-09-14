@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, firstName: string, lastName: string, ageGroup: string, role: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, ageGroup: string, role: string, gender?: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 }
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, ageGroup: string, role: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string, ageGroup: string, role: string, gender?: string) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -74,7 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 last_name: lastName,
                 email: email,
                 age_group: ageGroup,
-                role: role
+                role: role,
+                gender: gender
               });
 
             if (profileError) {

@@ -123,7 +123,7 @@ const AISuggestions = () => {
     }
   ];
 
-  const dailyFacts = [
+  const staticDailyFacts = [
     "🍎 An apple a day provides 4g of fiber and 14% of daily Vitamin C needs",
     "🥛 Milk contains 8g of complete protein and 30% of daily calcium needs",
     "🥜 Nuts are 80% healthy fats and can reduce heart disease risk by 30%",
@@ -410,7 +410,7 @@ const AISuggestions = () => {
             <span>Daily Nutrition Facts</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {dailyFacts.map((fact, index) => (
+            {staticDailyFacts.map((fact, index) => (
               <Card key={index} className="shadow-card border-0 bg-gradient-to-r from-primary/5 to-accent/5">
                 <CardContent className="p-4">
                   <p className="text-foreground font-medium">{fact}</p>

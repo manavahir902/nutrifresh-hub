@@ -137,41 +137,54 @@ export function MealPlanGenerator() {
 
     const { weight, height_cm, body_type, goal } = student.student_details;
     
-    // Calculate BMR using Mifflin-St Jeor Equation
+    // Enhanced BMR calculation using Mifflin-St Jeor Equation
     const age = 16; // Default age for students
-    const bmr = 10 * weight + 6.25 * height_cm - 5 * age + 5; // Male formula
+    const gender = 'male'; // Default gender for students
     
-    // Activity factor (sedentary to lightly active for students)
-    const activityFactor = 1.4;
-    const tdee = bmr * activityFactor;
-    
-    let targetCalories = tdee;
-    let proteinRatio = 0.25;
-    let carbRatio = 0.45;
-    let fatRatio = 0.30;
-    
-    // Adjust based on goal
-    switch (goal) {
-      case 'weight_gain':
-        targetCalories = tdee + 300;
-        proteinRatio = 0.30;
-        carbRatio = 0.40;
-        fatRatio = 0.30;
-        break;
-      case 'weight_loss':
-        targetCalories = tdee - 300;
-        proteinRatio = 0.35;
-        carbRatio = 0.35;
-        fatRatio = 0.30;
-        break;
-      case 'balance_weight':
-      default:
-        // Keep default ratios
-        break;
+    let bmr: number;
+    if (age >= 18) {
+      // Adult BMR calculation
+      bmr = 10 * weight + 6.25 * height_cm - 5 * age;
+      bmr += gender === 'male' ? 5 : -161;
+    } else {
+      // Child BMR calculation (simplified)
+      bmr = 22.5 * weight + 499 * (height_cm / 100) - 20.1 * age + (gender === 'male' ? 25 : 0);
     }
     
+    // Activity factors
+    const activityFactors = {
+      sedentary: 1.2,
+      moderate: 1.55,
+      high: 1.75
+    };
+    
+    // Default to moderate activity for students
+    const activityFactor = activityFactors.moderate;
+    let dailyCalories = bmr * activityFactor;
+    
+    // Apply goal adjustments (adults only)
+    if (age >= 18) {
+      switch (goal) {
+        case 'weight_gain':
+          dailyCalories *= 1.12; // +12%
+          break;
+        case 'weight_loss':
+          dailyCalories *= 0.88; // -12%
+          break;
+        case 'balance_weight':
+        default:
+          // No adjustment
+          break;
+      }
+    }
+    
+    const targetCalories = Math.round(dailyCalories);
+    const proteinRatio = 0.15; // 15% protein for Indian meals
+    const carbRatio = 0.60;    // 60% carbs for Indian meals
+    const fatRatio = 0.25;     // 25% fat for Indian meals
+    
     return {
-      calories: Math.round(targetCalories),
+      calories: targetCalories,
       protein: Math.round((targetCalories * proteinRatio) / 4), // 4 cal/g protein
       carbs: Math.round((targetCalories * carbRatio) / 4), // 4 cal/g carbs
       fats: Math.round((targetCalories * fatRatio) / 9) // 9 cal/g fat
@@ -284,40 +297,65 @@ export function MealPlanGenerator() {
     const selectedFoods = [];
     let remainingCalories = targetCalories;
 
-    // Filter food items based on meal type and plan type
-    let availableFoods = foodItems.filter(food => {
-      if (mealType === 'breakfast') {
-        return ['grain', 'dairy', 'fruit'].includes(food.category);
-      } else if (mealType === 'lunch' || mealType === 'dinner') {
-        return ['grain', 'protein', 'vegetable', 'dairy'].includes(food.category);
-      } else if (mealType === 'snack') {
-        return ['fruit', 'dairy'].includes(food.category);
+    // Enhanced food selection with proper Indian meal combinations
+    const mealCombinations = {
+      breakfast: [
+        { id: 'idli', quantity: 80, calories: 120 },
+        { id: 'poha', quantity: 100, calories: 150 },
+        { id: 'upma', quantity: 100, calories: 140 }
+      ],
+      lunch: [
+        { id: 'dal-rice', quantity: 200, calories: 360 },
+        { id: 'rajma-rice', quantity: 200, calories: 390 },
+        { id: 'chana-masala', quantity: 200, calories: 370 }
+      ],
+      dinner: [
+        { id: 'khichdi', quantity: 150, calories: 180 },
+        { id: 'aloo-paratha', quantity: 120, calories: 336 },
+        { id: 'dal-makhani', quantity: 180, calories: 360 }
+      ],
+      snack: [
+        { id: 'banana', quantity: 80, calories: 89 },
+        { id: 'milk', quantity: 100, calories: 61 },
+        { id: 'samosa', quantity: 60, calories: 180 }
+      ]
+    };
+
+    // Get appropriate combinations for meal type
+    const combinations = mealCombinations[mealType as keyof typeof mealCombinations] || [];
+    
+    // Select combination that best matches target calories
+    let bestCombination = combinations[0];
+    let bestDiff = Math.abs(combinations[0]?.calories - targetCalories) || Infinity;
+    
+    combinations.forEach(combo => {
+      const diff = Math.abs(combo.calories - targetCalories);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestCombination = combo;
       }
-      return true;
     });
 
-    // Adjust for plan type
-    if (planType === 'weight_gain') {
-      availableFoods = availableFoods.filter(food => food.calories_per_100g > 100);
-    } else if (planType === 'weight_loss') {
-      availableFoods = availableFoods.filter(food => food.calories_per_100g < 200);
+    if (bestCombination) {
+      selectedFoods.push({
+        id: bestCombination.id,
+        quantity: bestCombination.quantity
+      });
     }
 
-    // Select foods to meet calorie target
-    while (remainingCalories > 50 && availableFoods.length > 0) {
-      const randomFood = availableFoods[Math.floor(Math.random() * availableFoods.length)];
-      const maxQuantity = Math.min(200, Math.round(remainingCalories / (randomFood.calories_per_100g / 100)));
+    // If still need more calories, add complementary items
+    if (remainingCalories > 100 && mealType === 'lunch') {
+      // Add vegetables or raita
+      const complementaryItems = [
+        { id: 'aloo-gobi', quantity: 80, calories: 132 },
+        { id: 'cucumber-raita', quantity: 50, calories: 22 }
+      ];
       
-      if (maxQuantity >= 50) {
-        selectedFoods.push({
-          id: randomFood.id,
-          quantity: maxQuantity
-        });
-        remainingCalories -= (randomFood.calories_per_100g / 100) * maxQuantity;
-      }
-      
-      // Remove this food to avoid repetition
-      availableFoods = availableFoods.filter(f => f.id !== randomFood.id);
+      const randomComplement = complementaryItems[Math.floor(Math.random() * complementaryItems.length)];
+      selectedFoods.push({
+        id: randomComplement.id,
+        quantity: randomComplement.quantity
+      });
     }
 
     return selectedFoods;

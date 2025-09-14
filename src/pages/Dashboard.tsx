@@ -4,7 +4,6 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Link } from "react-router-dom";
 import { useStudentDetails } from "@/hooks/useStudentDetails";
 import { StudentDetailsModal } from "@/components/auth/StudentDetailsModal";
-import { UpdateFoodItems } from "@/components/UpdateFoodItems";
 
 const Dashboard = () => {
   const { showDetailsModal, setShowDetailsModal, refreshStudentDetails } = useStudentDetails();
@@ -136,17 +135,6 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* Update Food Items Section */}
-      <section className="py-16 px-4 bg-background">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-8">
-            Database Management
-          </h2>
-          <div className="flex justify-center">
-            <UpdateFoodItems />
-          </div>
-        </div>
-      </section>
 
       {/* Student Details Modal */}
       <StudentDetailsModal 

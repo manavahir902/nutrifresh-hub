@@ -11,16 +11,18 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const { toast } = useToast();
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState("student");
+  const [activeTab, setActiveTab] = useState("signup");
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    studentId: "",
-    childName: ""
+    firstName: "",
+    lastName: "",
+    gender: "",
+    ageGroup: "18-20"
   });
 
   const handleSubmit = async (e: React.FormEvent, userType: string) => {
@@ -35,56 +37,114 @@ const Login = () => {
       return;
     }
 
-    setLoading(true);
-    const { error } = await signIn(formData.email, formData.password);
-    
-    if (error) {
+    // For signup, check additional required fields
+    if (userType === "signup" && (!formData.firstName || !formData.lastName || !formData.gender)) {
       toast({
-        title: "Login Failed",
-        description: error.message,
+        title: "Missing Information",
+        description: "Please fill in all required fields for signup.",
         variant: "destructive"
       });
+      return;
+    }
+
+    setLoading(true);
+    
+    if (userType === "signup") {
+      const { error } = await signUp(
+        formData.email, 
+        formData.password, 
+        formData.firstName, 
+        formData.lastName, 
+        formData.ageGroup, 
+        "student",
+        formData.gender
+      );
+      
+      if (error) {
+        toast({
+          title: "Signup Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Signup Successful!",
+          description: "Please check your email to confirm your account.",
+        });
+        
+        // Reset form
+        setFormData({
+          email: "",
+          password: "",
+          firstName: "",
+          lastName: "",
+          gender: "",
+          ageGroup: "18-20"
+        });
+        
+        // Switch to student login tab
+        setActiveTab("student");
+      }
     } else {
-      toast({
-        title: "Login Successful!",
-        description: `Welcome back! Logging in as ${userType}.`,
-      });
+      const { error } = await signIn(formData.email, formData.password);
       
-      // Reset form
-      setFormData({
-        email: "",
-        password: "",
-        studentId: "",
-        childName: ""
-      });
-      
-      // Navigate to dashboard
-      navigate("/");
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Login Successful!",
+          description: `Welcome back! Logging in as ${userType}.`,
+        });
+        
+        // Reset form
+        setFormData({
+          email: "",
+          password: "",
+          firstName: "",
+          lastName: "",
+          gender: "",
+          ageGroup: "18-20"
+        });
+        
+        // Navigate to dashboard
+        navigate("/");
+      }
     }
     setLoading(false);
   };
 
   const userTypes = [
     {
-      id: "student",
-      name: "Student",
+      id: "signup",
+      name: "Sign Up",
       icon: User,
-      description: "Access your personal nutrition dashboard",
+      description: "Create your student account",
       color: "from-primary to-accent"
     },
     {
-      id: "parent",
-      name: "Parent",
-      icon: Users,
-      description: "View your child's nutrition reports and progress",
+      id: "student",
+      name: "Student Login",
+      icon: User,
+      description: "Access your personal nutrition dashboard",
       color: "from-accent to-primary"
     },
     {
       id: "teacher",
-      name: "Teacher",
+      name: "Teacher Login",
       icon: GraduationCap,
       description: "Monitor class nutrition metrics and student progress",
       color: "from-success to-primary"
+    },
+    {
+      id: "admin",
+      name: "Admin Login",
+      icon: Users,
+      description: "Admin panel access",
+      color: "from-destructive to-primary"
     }
   ];
 
@@ -109,7 +169,7 @@ const Login = () => {
           </CardHeader>
           <CardContent className="p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 {userTypes.map((type) => (
                   <TabsTrigger 
                     key={type.id} 
@@ -182,31 +242,66 @@ const Login = () => {
                       </div>
                     </div>
 
-                    {/* Additional Fields */}
-                    {type.id === "student" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="studentId">Student ID (Optional)</Label>
-                        <Input
-                          id="studentId"
-                          placeholder="Enter your student ID"
-                          value={formData.studentId}
-                          onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                          className="focus:ring-primary focus:border-primary"
-                        />
-                      </div>
-                    )}
-
-                    {type.id === "parent" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="childName">Child's Name (Optional)</Label>
-                        <Input
-                          id="childName"
-                          placeholder="Enter your child's name"
-                          value={formData.childName}
-                          onChange={(e) => setFormData({ ...formData, childName: e.target.value })}
-                          className="focus:ring-primary focus:border-primary"
-                        />
-                      </div>
+                    {/* Signup Additional Fields */}
+                    {type.id === "signup" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input
+                              id="firstName"
+                              placeholder="Enter your first name"
+                              value={formData.firstName}
+                              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                              className="focus:ring-primary focus:border-primary"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input
+                              id="lastName"
+                              placeholder="Enter your last name"
+                              value={formData.lastName}
+                              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                              className="focus:ring-primary focus:border-primary"
+                              required
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="gender">Gender</Label>
+                          <select
+                            id="gender"
+                            value={formData.gender}
+                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                            className="w-full px-3 py-2 border border-input bg-background rounded-md focus:ring-primary focus:border-primary"
+                            required
+                          >
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="ageGroup">Age Group</Label>
+                          <select
+                            id="ageGroup"
+                            value={formData.ageGroup}
+                            onChange={(e) => setFormData({ ...formData, ageGroup: e.target.value })}
+                            className="w-full px-3 py-2 border border-input bg-background rounded-md focus:ring-primary focus:border-primary"
+                            required
+                          >
+                            <option value="18-20">18-20</option>
+                            <option value="21-25">21-25</option>
+                            <option value="26-30">26-30</option>
+                            <option value="31+">31+</option>
+                          </select>
+                        </div>
+                      </>
                     )}
 
                     {/* Submit Button */}
@@ -216,18 +311,27 @@ const Login = () => {
                       disabled={loading}
                     >
                       <type.icon className="h-5 w-5 mr-2" />
-                      {loading ? "Signing In..." : `Sign In as ${type.name}`}
+                      {loading ? (type.id === "signup" ? "Creating Account..." : "Signing In...") : 
+                        (type.id === "signup" ? "Create Account" : `Sign In as ${type.name}`)}
                     </Button>
                   </form>
 
                   {/* Additional Options */}
                   <div className="text-center space-y-2">
-                    <Button variant="ghost" size="sm" className="text-primary">
-                      Forgot Password?
-                    </Button>
-                    <p className="text-xs text-muted-foreground">
-                      Don't have an account? Contact your school administrator
-                    </p>
+                    {type.id !== "signup" && (
+                      <Button variant="ghost" size="sm" className="text-primary">
+                        Forgot Password?
+                      </Button>
+                    )}
+                    {type.id === "signup" ? (
+                      <p className="text-xs text-muted-foreground">
+                        Already have an account? Switch to login tabs above
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Don't have an account? Use the Sign Up tab
+                      </p>
+                    )}
                   </div>
                 </TabsContent>
               ))}

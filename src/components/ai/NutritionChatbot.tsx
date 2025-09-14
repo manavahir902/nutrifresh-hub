@@ -59,8 +59,106 @@ const quickQuestions: QuickQuestion[] = [
   }
 ];
 
-// Simple AI responses based on keywords (in a real app, you'd use an actual AI service)
-const getAIResponse = (userMessage: string): string => {
+// Enhanced AI Response using multiple free AI services
+const getAIResponse = async (userMessage: string): Promise<string> => {
+  try {
+    // Create a detailed nutrition-focused prompt
+    const prompt = `You are a professional nutritionist and health coach specializing in Indian cuisine and student wellness. Provide practical, evidence-based advice about nutrition, healthy eating, meal planning, and wellness for young adults. Keep responses helpful, concise (2-3 paragraphs), and actionable. Focus on Indian food, practical cooking tips, and realistic advice for busy students.
+
+User question: ${userMessage}
+
+Response:`;
+
+    // Try multiple free AI services for better reliability
+    const aiServices = [
+      {
+        name: 'Hugging Face DialoGPT',
+        url: 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium',
+        headers: {
+          'Authorization': 'Bearer hf_your_token_here',
+          'Content-Type': 'application/json',
+        }
+      },
+      {
+        name: 'Hugging Face Flan-T5',
+        url: 'https://api-inference.huggingface.co/models/google/flan-t5-large',
+        headers: {
+          'Authorization': 'Bearer hf_your_token_here',
+          'Content-Type': 'application/json',
+        }
+      }
+    ];
+
+    for (const service of aiServices) {
+      try {
+        const response = await fetch(service.url, {
+          method: 'POST',
+          headers: service.headers,
+          body: JSON.stringify({
+            inputs: prompt,
+            parameters: {
+              max_length: 300,
+              temperature: 0.8,
+              do_sample: true,
+              return_full_text: false
+            }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const fullResponse = data[0]?.generated_text || '';
+          const trimmedResponse = fullResponse.replace(prompt, '').trim();
+          
+          if (trimmedResponse && trimmedResponse.length > 20) {
+            console.log(`AI response from ${service.name}:`, trimmedResponse);
+            return trimmedResponse;
+          }
+        }
+      } catch (serviceError) {
+        console.log(`${service.name} failed:`, serviceError);
+        continue;
+      }
+    }
+
+    // If all AI services fail, use enhanced fallback
+    return getEnhancedFallbackResponse(userMessage);
+  } catch (error) {
+    console.error('All AI services failed:', error);
+    return getEnhancedFallbackResponse(userMessage);
+  }
+};
+
+// Enhanced fallback responses with better Indian nutrition advice
+const getEnhancedFallbackResponse = (userMessage: string): string => {
+  const message = userMessage.toLowerCase();
+  
+  // Indian breakfast suggestions
+  if (message.includes('breakfast') || message.includes('morning meal')) {
+    return "For a healthy Indian breakfast, try these nutritious options:\n\n• **Poha with vegetables** - Light, easy to digest, and packed with iron\n• **Idli with sambar** - Protein-rich and probiotic-friendly\n• **Oats upma** - High fiber with Indian spices\n• **Besan chilla** - High protein pancake with vegetables\n\nStart your day with 300-500 calories to fuel your morning activities!";
+  }
+  
+  // Indian lunch ideas
+  if (message.includes('lunch') || message.includes('afternoon meal')) {
+    return "For a balanced Indian lunch, include:\n\n• **Dal with rice/roti** - Complete protein with carbohydrates\n• **Vegetable curry** - Rich in vitamins and minerals\n• **Raita or curd** - Probiotics and calcium\n• **Green salad** - Fresh vegetables for fiber\n\nAim for 500-700 calories with a good mix of protein, carbs, and healthy fats!";
+  }
+  
+  // Weight management
+  if (message.includes('weight') || message.includes('lose') || message.includes('gain')) {
+    return "For healthy weight management with Indian food:\n\n**To lose weight:**\n• Control portion sizes of rice/roti\n• Include more vegetables and dal\n• Limit fried foods and sweets\n• Stay hydrated with water and buttermilk\n\n**To gain weight:**\n• Add nuts and dry fruits to meals\n• Include ghee and healthy oils\n• Eat more protein-rich foods like paneer, dal, and eggs\n• Have healthy snacks between meals";
+  }
+  
+  // General nutrition advice
+  if (message.includes('healthy') || message.includes('nutrition')) {
+    return "Here are key nutrition tips for Indian students:\n\n• **Eat seasonal fruits and vegetables** - They're fresher and more nutritious\n• **Include all food groups** - Grains, pulses, vegetables, fruits, dairy\n• **Stay hydrated** - Drink 8-10 glasses of water daily\n• **Limit processed foods** - Choose homemade meals when possible\n• **Eat regular meals** - Don't skip breakfast or lunch";
+  }
+  
+  // Default response
+  return "I'm here to help with your nutrition questions! Ask me about:\n\n• Healthy Indian breakfast ideas\n• Balanced lunch and dinner options\n• Weight management tips\n• Meal planning for students\n• Nutritional benefits of Indian foods\n\nWhat would you like to know about healthy eating?";
+};
+
+// Fallback responses when AI service is unavailable
+const getFallbackResponse = (userMessage: string): string => {
   const message = userMessage.toLowerCase();
   
   // Breakfast questions
@@ -144,10 +242,7 @@ export function NutritionChatbot() {
     setIsLoading(true);
 
     try {
-      // Simulate AI processing time
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-      
-      const aiResponse = getAIResponse(userMessage.content);
+      const aiResponse = await getAIResponse(userMessage.content);
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -183,10 +278,7 @@ export function NutritionChatbot() {
     setIsLoading(true);
 
     try {
-      // Simulate AI processing time
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-      
-      const aiResponse = getAIResponse(question.question);
+      const aiResponse = await getAIResponse(question.question);
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
